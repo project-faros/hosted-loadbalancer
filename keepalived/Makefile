@@ -1,10 +1,10 @@
 .PHONY : build _dockerfile publish clean clean_container clean_image run join start stop devel _devel_run
 
 IMAGE=hosted-loadbalancer-keepalived
-VERS=$(shell cat version.txt)
+VERS=$(shell cat ../version.txt)
 NAME=$(IMAGE)_dev
 DEVDIR=$(shell pwd)
-UPSTREAM=$(shell cat upstream.txt)
+UPSTREAM=$(shell cat ../upstream.txt)
 
 build: clean _build_app
 _build_app:
