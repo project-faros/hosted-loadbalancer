@@ -18,7 +18,7 @@ spec:
       containers:
       - name: keepalived
         imagePullPolicy: Always
-        image: quay.io/faros/hosted-loadbalancer-keepalived:dev
+        image: quay.io/faros/hosted-loadbalancer-keepalived:latest
         serviceAccountName: hosted-loadbalancer
         securityContext:
           privileged: true
