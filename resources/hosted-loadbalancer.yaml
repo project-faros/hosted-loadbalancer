@@ -17,12 +17,27 @@ spec:
     spec:
       containers:
       - name: keepalived
-        imagePullPolicy: always
-        image: quay.io/faros/hosted-loadbalancer-keepalived:dev
+        imagePullPolicy: Always
+        image: quay.io/faros/hosted-loadbalancer-keepalived:latest
         serviceAccountName: hosted-loadbalancer
         securityContext:
           privileged: true
           runAsUser: 0
+        envFrom:
+        - configMapRef:
+            name: hosted-loadbalancer-keepalived
+        livenessProbe:
+          exec:
+            command:
+              - /app/healthz
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+              - /app/healthz
+          initialDelaySeconds: 5
+          periodSeconds: 5
       nodeSelector:
         node-role.kubernetes.io/master: ""
       serviceAccountName: hosted-loadbalancer

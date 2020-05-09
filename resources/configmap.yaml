@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hosted-loadbalancer-keepalived
+  namespace: openshift-hosted-loadbalancer
+data:
+  VIP_ADDR: "192.168.8.60"
+  ROUTER_ID: "100"
+  VIP_PASS: "SecretP4SS"
+

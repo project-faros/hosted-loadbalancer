@@ -1,0 +1,4 @@
+#!/bin/bash
+
+kill -0 $(cat /tmp/keepalived.pid 2> /dev/null) 2> /dev/null && \
+    kill -0 $(cat /tmp/keepalived.vrrp.pid 2> /dev/null) 2> /dev/null

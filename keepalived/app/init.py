@@ -2,15 +2,34 @@
 """Keepalived Launcher"""
 import netifaces
 import ipaddress
+import os
 import socket
 import sys
 import subprocess
 from kubernetes import client, config
 
+# contants
+CONFIG_FILE = '/tmp/keepalived.conf'
+PID_FILE = '/tmp/keepalived.pid'
+VRRP_PID_FILE = '/tmp/keepalived.vrrp.pid'
+CHECKERS_PID_FILE = '/tmp/keepalived.checkers.pid'
+
 # gather config map input
-vip_addr = '192.168.8.60'
-router_id = '100'
-vip_pass = 'SecretP4SS'
+vip_addr = os.environ.get('VIP_ADDR')
+router_id = os.environ.get('ROUTER_ID')
+vip_pass = os.environ.get('VIP_PASS')
+fail = False
+if not vip_addr:
+    print('ERROR: The VIP_ADDR environment variable has not been set.')
+    fail = True
+if not router_id:
+    print('ERROR: The ROUTER_ID environment variable has not been set.')
+    fail = True
+if not vip_pass:
+    print('ERROR: The VIP_PASS environment variable has not been set.')
+    fail = True
+if fail:
+    sys.exit(1)
 
 # find correct nic
 search = ipaddress.ip_address(vip_addr)
@@ -35,7 +54,7 @@ else:
     print('ERROR: Unable to find hostname {} in cluster'.format(hostname))
 
 # write the config file
-with open('/tmp/keepalived.conf', 'w') as config:
+with open(CONFIG_FILE, 'w') as config:
     config.write(f"""global_defs {{
    router_id ocp_hosted_lb
    vrrp_skip_check_adv_addr
@@ -55,7 +74,7 @@ vrrp_instance VI_1 {{
         {vip_addr} # USER INPUT
     }}
 }}""")
-sys.stdout.write(f"""global_defs {{
+print(f"""global_defs {{
    router_id ocp_hosted_lb
    vrrp_skip_check_adv_addr
 }}
@@ -76,5 +95,9 @@ vrrp_instance VI_1 {{
 }}""")
 
 # run keepalived
-proc = subprocess.Popen(['keepalived', '-f', '/tmp/keepalived.conf', '-ln'])
+proc = subprocess.Popen(['keepalived', '-ln',
+                         '-f', CONFIG_FILE,
+                         '-p', PID_FILE,
+                         '-r', VRRP_PID_FILE,
+                         '-c', CHECKERS_PID_FILE])
 sys.exit(proc.wait())
