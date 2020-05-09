@@ -4,7 +4,7 @@ LABEL maintainer="Ryan Kraus (rkraus@redhat.com)"
 COPY requirements.txt /requirements.txt
 RUN microdnf update
 
-RUN microdnf install iproute wget hostname tar gzip python3 keepalived; \
+RUN microdnf install iproute wget hostname tar gzip python3 keepalived nc; \
     pip3 install -r requirements.txt; \
     # cd /usr/local/bin; \
     # wget -O oc.tgz https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz; \

@@ -58,6 +58,16 @@ with open(CONFIG_FILE, 'w') as config:
     config.write(f"""global_defs {{
    router_id ocp_hosted_lb
    vrrp_skip_check_adv_addr
+   enable_script_security
+}}
+
+vrrp_script chk_haproxy {{
+  script "nc -zv localhost 80"
+  interval 5
+  rise 2
+  fall 2
+  user nobody
+  init_fail
 }}
 
 vrrp_instance VI_1 {{
@@ -72,11 +82,24 @@ vrrp_instance VI_1 {{
     }}
     virtual_ipaddress {{
         {vip_addr} # USER INPUT
+    }}
+    track_script {{
+        chk_haproxy
     }}
 }}""")
 print(f"""global_defs {{
    router_id ocp_hosted_lb
    vrrp_skip_check_adv_addr
+   enable_script_security
+}}
+
+vrrp_script chk_haproxy {{
+  script "nc -zv localhost 80"
+  interval 5
+  rise 2
+  fall 2
+  user nobody
+  init_fail
 }}
 
 vrrp_instance VI_1 {{
@@ -91,6 +114,9 @@ vrrp_instance VI_1 {{
     }}
     virtual_ipaddress {{
         {vip_addr} # USER INPUT
+    }}
+    track_script {{
+        chk_haproxy
     }}
 }}""")
 
