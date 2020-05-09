@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-hosted-loadbalancer
+spec:
+  finalizers:
+  - kubernetes
+
+
