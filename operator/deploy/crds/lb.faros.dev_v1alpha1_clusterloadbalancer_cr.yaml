@@ -1,0 +1,11 @@
+apiVersion: lb.faros.dev/v1alpha1
+kind: ClusterLoadBalancer
+metadata:
+  name: example-clusterloadbalancer
+spec:
+  # Add fields here
+  vip_addr: '192.168.8.60'
+  router_id: '100'
+  vip_pass: 'SecretP4SS'
+  node_selector:
+    node-role.kubernetes.io/master: ""

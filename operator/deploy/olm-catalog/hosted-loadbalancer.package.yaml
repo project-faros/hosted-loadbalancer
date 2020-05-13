@@ -1,0 +1,5 @@
+packageName: hosted-loadbalancer
+channels:
+  - name: beta
+    currentCSV: hosted-loadbalancer.0.0.1
+defaultChannel: beta

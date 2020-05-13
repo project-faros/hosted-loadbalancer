@@ -1,0 +1,5 @@
+venv
+*.pyo
+__pycache__
+*.swp
+.token

@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hosted-loadbalancer-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: hosted-loadbalancer-operator
+  template:
+    metadata:
+      labels:
+        name: hosted-loadbalancer-operator
+    spec:
+      serviceAccountName: hosted-loadbalancer-operator
+      containers:
+        - name: hosted-loadbalancer-operator
+          # Replace this with the built image name
+          image: "quay.io/faros/hosted-loadbalancer-operator:latest"
+          imagePullPolicy: "Always"
+          volumeMounts:
+          - mountPath: /tmp/ansible-operator/runner
+            name: runner
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "hosted-loadbalancer-operator"
+            - name: ANSIBLE_GATHERING
+              value: explicit
+      volumes:
+        - name: runner
+          emptyDir: {}

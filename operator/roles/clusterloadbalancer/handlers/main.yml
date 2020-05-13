@@ -1,0 +1,5 @@
+---
+# handlers file for clusterloadbalancer
+- name: restart
+  shell: >
+    oc rollout restart -n openshift-hosted-loadbalancer daemonset/hosted-loadbalancer

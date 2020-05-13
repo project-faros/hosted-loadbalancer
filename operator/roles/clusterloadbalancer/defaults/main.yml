@@ -1,0 +1,7 @@
+---
+vip_addr: ''
+router_id: ''
+vip_pass: ''
+loadbalancer_verion: "{{ lookup('file', '../../../version.txt') }}"
+node_selector:
+  node-role.kubernetes.io/master: ""

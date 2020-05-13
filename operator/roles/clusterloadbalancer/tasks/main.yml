@@ -1,0 +1,24 @@
+---
+# tasks file for clusterloadbalancer
+
+- name: create the hosted load balancer service account
+  k8s:
+    api_version: v1
+    state: present
+    definition: "{{ lookup('template', 'service-account.yaml.j2') }}"
+  register: sa_create
+  notify: restart
+
+- name: grant sa access to priviledged scc
+  shell: >
+    oc adm policy add-scc-to-user privileged
+    -z hosted-loadbalancer -n openshift-hosted-loadbalancer
+  when: sa_create is changed
+
+- name: create the hosted load balancer application
+  k8s:
+    api_version: v1
+    state: present
+    definition: "{{ lookup('template', 'application.yaml.j2') }}"
+  notify: restart
+
