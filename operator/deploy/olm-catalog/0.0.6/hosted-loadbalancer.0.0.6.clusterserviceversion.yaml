@@ -1,0 +1,314 @@
+apiVersion: operators.coreos.com/v1beta1
+kind: ClusterServiceVersion
+metadata:
+  name: hosted-loadbalancer.0.0.6
+  namespace: placeholder
+  annotations:
+    alm-examples: >
+      [{
+        "apiVersion": "lb.faros.dev/v1beta1",
+        "kind": "ClusterLoadBalancer",
+        "metadata": {
+          "name": "default"
+        },
+        "spec": {
+          "vip_addr": "192.168.10.10",
+          "router_id": "100",
+          "vip_pass": "SecretP4SS",
+          "node_selector": {
+            "node-role.kubernetes.io/master": ""
+          }
+        }
+      }]
+    categories: 'OpenShift Optional, Networking'
+    certified: 'false'
+    description: >-
+      Allow the OpenShift cluster to operate without the requirement for an
+      external load balancer. This is intended to enable  bare metal, minimal
+      footprint, clusters.
+    containerImage: 'quay.io/faros/hosted-loadbalancer-operator:0.0.6'
+    support: ''
+    capabilities: Full Lifecycle
+    repository: 'https://github.com/project-faros/hosted-loadbalancer'
+    createdAt: 2020-05-13T12:00.000Z
+spec:
+  displayName: Self Hosted Cluster Load Balancer
+  description: |
+    ## Introduction
+
+    This operator will eliminate the need for an external load balancer at
+    run time. Under-the-hood, this does not actually run a load balancer.
+    Instead, this operator manages a VIP using keepalived and will plave the
+    VIP on a node running the cluster's ingress router.
+
+    ## Prerequisites
+
+    For this operator to work, the cluster must have been created using an
+    external load balancer such as HAProxy, per the OpenShift install
+    directions. The node running HAProxy should be hosting the load
+    balancer over a VIP that is already managed by Keepalived. Once the
+    cluster is up and the operator is functioning, the VIP will move from
+    this load balancer node to the cluster. At that point, the external load
+    balancer can be shut down.
+
+    For the external node keepalived config:
+      - The `router_id` should be `ocp_hosted_lb`
+      - The `virtual_router_id` used on the external needs to be the same as the router id configured in the operator.
+      - The `priority` of the external node should be low. Preferably 50 or below.
+      - The external node must use an `auth_type` of `PASS`. The `auth_pass` must be the same as the one configured in the operator.
+      - The `virtual_ipaddress` is the address that will be moved to the cluster. It must be the same as the one configured in the operator.
+
+    ## Example External Node Keepalived Config
+
+    ```
+    global_defs {
+      router_id ocp_hosted_lb
+      vrrp_skip_check_adv_addr
+      vrrp_garp_interval 0
+      vrrp_gna_interval 0
+    }
+
+    vrrp_instance VI_1 {
+        state BACKUP
+        interface farosbr0 # calculated
+        virtual_router_id 100 # USER INPUT
+        priority 10 # calculated
+        advert_int 1
+        authentication {
+            auth_type PASS
+            auth_pass SecretP4SS  # USER INPUT
+        }
+        virtual_ipaddress {
+            192.168.8.60 # USER INPUT
+        }
+    }
+    ```
+
+    ## Caveat
+
+    The external load balancer node is still required for restarting the
+    cluster after a shutdown. The procedure for starting your cluster is to
+    bring up the external load balancer, then bring up the cluster, wait
+    for the VIP to migrate to the cluster, finally shutdown the external
+    load balancer node.
+
+    ## Install
+
+    Before installation, create the namespace for this operator.
+    ```
+    cat > openshift-hosted-loadbalancer-namespace.yaml <<EOM
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-hosted-loadbalancer
+    spec:
+      finalizers:
+      - kubernetes
+    EOM
+
+    oc apply -f openshift-hosted-loadbalancer-namespace.yaml
+    ```
+  maturity: beta
+  replaces: ""
+  version: 0.0.6
+  minKubeVersion: 1.14.0
+  keywords:
+    - loadbalancer
+    - three-node
+    - bare-metal
+    - network
+  maintainers:
+    - name: Ryan Kraus
+      email: rkraus@redhat.com
+  provider:
+    name: Faros
+  labels: {}
+  selector:
+    matchLabels: {}
+  links:
+    - name: GitHub Organization
+      url: https://github.com/project-faros
+  customresourcedefinitions:
+    owned:
+      - name: clusterloadbalancers.lb.faros.dev
+        displayName: Cluster Load Balancer
+        kind: ClusterLoadBalancer
+        version: v1beta1
+        desctiption: >-
+          The self-hosted cluster load balancer.
+        resources:
+          - version: v1
+            kind: DaemonSet
+          - version: v1
+            kind: ConfigMap
+          - version: v1
+            kind: Pod
+          - version: v1
+            kind: ServiceAccount
+          - version: v1
+            kind: Role
+          - version: v1
+            kind: ClusterRole
+          - version: v1
+            kind: RoleBinding
+          - version: v1
+            kind: ClusterRoleBinding
+          - version: v1
+            kind: SecurityContextConstraint
+        specDescriptors:
+          - description: The IP address to move into the cluster.
+            displayName: VIP Address
+            path: vip_addr
+          - description: The Keepalived router ID.
+            displayName: Router ID
+            path: router_id
+          - description: The Keepalived cluster password.
+            displayName: VIP Password
+            path: vip_pass
+          - description: The Kubernetes node selector. Must match the router node selector.
+            displayName: Node Selector
+            path: node_selector
+        statusDescriptors: []
+  install:
+    strategy: deployment
+    spec:
+      permissions: []
+      clusterPermissions:
+        - serviceAccountName: hosted-loadbalancer-operator
+          rules:
+            - verbs:
+                - list
+                - watch
+                - update
+              apiGroups:
+                - lb.faros.dev
+              resources:
+                - clusterloadbalancers
+                - clusterloadbalancers/status
+            - apiGroups:
+                - security.openshift.io
+              resources:
+                - securitycontextconstraints
+              resourceNames:
+                - privileged
+              verbs:
+                - use
+            - apiGroups:
+                - ''
+              resources:
+                - pods
+                - services
+                - services/finalizers
+                - endpoints
+                - persistentvolumeclaims
+                - events
+                - configmaps
+                - secrets
+                - serviceaccounts
+                - nodes
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - apps
+              resources:
+                - deployments
+                - daemonsets
+                - replicasets
+                - statefulsets
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - security.openshift.io
+              resources:
+                - securitycontextcontraints
+              verbs:
+                - get
+                - list
+                - update
+                - patch
+            - apiGroups:
+                - rbac.authorization.k8s.io
+              resources:
+                - roles
+                - clusterroles
+                - rolebindings
+                - clusterrolebindings
+              verbs:
+                - get
+                - list
+                - delete
+                - create
+                - update
+                - patch
+            - apiGroups:
+              - monitoring.coreos.com
+              resources:
+              - servicemonitors
+              verbs:
+              - get
+              - create
+            - apiGroups:
+              - apps
+              resourceNames:
+              - operator
+              resources:
+              - deployments/finalizers
+              verbs:
+              - update
+      deployments:
+        - name: hosted-loadbalancer-operator
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                name: hosted-loadbalancer-operator
+            template:
+              metadata:
+                labels:
+                  name: hosted-loadbalancer-operator
+              spec:
+                serviceAccountName: hosted-loadbalancer-operator
+                containers:
+                  - name: hosted-loadbalancer-operator
+                    image: 'quay.io/faros/hosted-loadbalancer-operator:0.0.6'
+                    imagePullPolicy: Always
+                    volumeMounts:
+                    - mountPath: /tmp/ansible-operator/runner
+                      name: runner
+                    env:
+                      - name: WATCH_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: OPERATOR_NAME
+                        value: "hosted-loadbalancer-operator"
+                      - name: ANSIBLE_GATHERING
+                        value: explicit
+                volumes:
+                  - name: runner
+                    emptyDir: {}
+  installModes:
+    - type: OwnNamespace
+      supported: true
+    - type: SingleNamespace
+      supported: true
+    - type: MultiNamespace
+      supported: false
+    - type: AllNamespaces
+      supported: false

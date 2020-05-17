@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: operator
+  name: hosted-loadbalancer-operator
 rules:
 - apiGroups:
   - ""
@@ -15,6 +15,7 @@ rules:
   - events
   - configmaps
   - secrets
+  - serviceaccounts
   verbs:
   - create
   - delete
@@ -38,6 +39,37 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+    - security.openshift.io
+  resources:
+    - securitycontextcontraints
+  verbs:
+    - get
+    - list
+    - update
+    - patch
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - privileged
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+- apiGroups:
+    - rbac.authorization.k8s.io
+  resources:
+    - roles
+    - clusterroles
+    - rolebindings
+    - clusterrolebindings
+  verbs:
+    - get
+    - list
+    - delete
+    - create
+    - update
+    - patch
 - apiGroups:
   - monitoring.coreos.com
   resources:
