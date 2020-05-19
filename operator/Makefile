@@ -9,7 +9,7 @@ UPSTREAM=$(shell cat ../upstream.txt)
 TOKEN=basic cm1rcmF1czpiITdDbTUmQ1kyQ0A2UGQ=
 
 build:
-	operator-sdk build --image-builder podman $(UPSTREAM)/$(IMAGE):$(VERS)
+	operator-sdk build --image-builder podman $(UPSTREAM)/$(IMAGE):$(APP_VERS)
 
 bundle:
 	operator-sdk bundle create $(UPSTREAM)/$(APPLICATION):latest \
@@ -20,8 +20,8 @@ bundle:
 		--image-builder podman
 
 publish:
-	podman image tag $(UPSTREAM)/$(IMAGE):$(VERS) $(UPSTREAM)/$(IMAGE):latest
-	podman push $(UPSTREAM)/$(IMAGE):$(VERS)
+	podman image tag $(UPSTREAM)/$(IMAGE):$(APP_VERS) $(UPSTREAM)/$(IMAGE):latest
+	podman push $(UPSTREAM)/$(IMAGE):$(APP_VERS)
 	podman push $(UPSTREAM)/$(IMAGE):latest
 
 publish_bundle:

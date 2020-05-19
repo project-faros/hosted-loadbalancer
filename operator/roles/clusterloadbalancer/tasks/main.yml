@@ -7,7 +7,6 @@
     state: present
     definition: "{{ lookup('template', 'service-account.yaml.j2') }}"
   register: sa_create
-  notify: restart
 
 - name: grant sa access to priviledged scc
   shell: >
@@ -20,5 +19,3 @@
     api_version: v1
     state: present
     definition: "{{ lookup('template', 'application.yaml.j2') }}"
-  notify: restart
-

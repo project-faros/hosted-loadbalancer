@@ -8,4 +8,4 @@ COPY watches.yaml ${HOME}/watches.yaml
 
 COPY roles/ ${HOME}/roles/
 
-COPY ../version.txt ${HOME}/version.txt
+COPY ../version.keepalived.txt ${HOME}/version.keepalived.txt
