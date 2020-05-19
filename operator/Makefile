@@ -1,15 +1,15 @@
 .PHONY : build _dockerfile publish clean clean_container clean_image run join start stop devel _devel_run
 
 APPLICATION=hosted-loadbalancer
-APP_VERS=$(shell date +%y.1%W.%u%H%M)
+APP_VERS=$(shell cat version.bundle.txt)
 IMAGE=hosted-loadbalancer-operator
-VERS=$(shell cat version.txt)
+VERS=$(shell cat version.operator.txt)
 DEVDIR=$(shell pwd)
 UPSTREAM=$(shell cat ../upstream.txt)
 TOKEN=basic cm1rcmF1czpiITdDbTUmQ1kyQ0A2UGQ=
 
 build:
-	operator-sdk build --image-builder podman $(UPSTREAM)/$(IMAGE):$(APP_VERS)
+	operator-sdk build --image-builder podman $(UPSTREAM)/$(IMAGE):$(VERS)
 
 bundle:
 	operator-sdk bundle create $(UPSTREAM)/$(APPLICATION):latest \
@@ -20,8 +20,8 @@ bundle:
 		--image-builder podman
 
 publish:
-	podman image tag $(UPSTREAM)/$(IMAGE):$(APP_VERS) $(UPSTREAM)/$(IMAGE):latest
-	podman push $(UPSTREAM)/$(IMAGE):$(APP_VERS)
+	podman image tag $(UPSTREAM)/$(IMAGE):$(VERS) $(UPSTREAM)/$(IMAGE):latest
+	podman push $(UPSTREAM)/$(IMAGE):$(VERS)
 	podman push $(UPSTREAM)/$(IMAGE):latest
 
 publish_bundle:
